@@ -1,0 +1,107 @@
+{
+  "name": "ski-stations-data",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ski-assistant",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ec654161-6cad-43c7-8538-bff816acbbe1",
+      "name": "Webhook",
+      "webhookId": "d10743fd-f3af-48f4-a688-c267f9f2dcb4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const stations = [\n  {\n    id: 1,\n    name: \"Poiana Brasov\",\n    region: \"Brasov\",\n    altitude_max: 1775,\n    slopes: 12,\n    difficulty: [\"beginner\", \"intermediate\", \"advanced\"],\n    open: true,\n    website: \"https://www.poiana-brasov.com\"\n  },\n  {\n    id: 2,\n    name: \"Sinaia\",\n    region: \"Prahova\",\n    altitude_max: 2000,\n    slopes: 15,\n    difficulty: [\"beginner\", \"intermediate\", \"advanced\"],\n    open: true,\n    website: \"https://www.sinaia.ro\"\n  },\n  {\n    id: 3,\n    name: \"Paltinis\",\n    region: \"Sibiu\",\n    altitude_max: 1894,\n    slopes: 6,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: true,\n    website: \"https://www.paltinis.ro\"\n  },\n  {\n    id: 4,\n    name: \"Straja\",\n    region: \"Hunedoara\",\n    altitude_max: 1868,\n    slopes: 8,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: false,\n    website: \"https://www.straja.ro\"\n  },\n  {\n    id: 5,\n    name: \"Predeal\",\n    region: \"Brasov\",\n    altitude_max: 1500,\n    slopes: 9,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: true,\n    website: \"https://www.predeal.ro\"\n  }\n];\n\nreturn stations.map(station => ({ json: station }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "37c6a8af-2d57-4454-bd08-326b07f92f98",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Ești un asistent pentru stațiuni de ski din România. Răspunde întotdeauna în română.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Webhook').item.json.body.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "bdac725b-da94-40b4-9b9d-c62467549462",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "fm8F1e8JS6xoEVla",
+          "name": "Header Auth account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f0cde203-60b0-460e-bbaa-a4907b4ba2c6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c54cb67ad4c89ee9523a2795d1bc98545a552b6ae46e72a55ccebe0cc00c3420"
+  },
+  "id": "uJsopXOHFA4kgJvA",
+  "tags": []
+}
