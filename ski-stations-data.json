@@ -5,6 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "ski-assistant",
+        "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -46,14 +47,15 @@
           ]
         },
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Ești un asistent pentru stațiuni de ski din România. Răspunde întotdeauna în română.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Webhook').item.json.body.message }}\"\n    }\n  ]\n}",
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.body }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        416,
+        624,
         0
       ],
       "id": "bdac725b-da94-40b4-9b9d-c62467549462",
@@ -64,6 +66,47 @@
           "name": "Header Auth account 2"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const userMessage = $('Webhook').item.json.body.message;\n\nreturn [{\n  json: {\n    body: JSON.stringify({\n      model: \"llama-3.3-70b-versatile\",\n      messages: [\n        {\n          role: \"system\",\n          content: \"Ești un asistent pentru stațiuni de ski din România. Răspunde întotdeauna în română.\"\n        },\n        {\n          role: \"user\", \n          content: userMessage\n        }\n      ]\n    })\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1f1f2ca2-c6b6-4f40-a4dc-95fa80cff12d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        0
+      ],
+      "id": "07656dec-7be5-418d-8846-da35f2899efe",
+      "name": "Respond to Webhook"
     }
   ],
   "pinData": {},
@@ -83,7 +126,29 @@
       "main": [
         [
           {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
             "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
@@ -91,13 +156,13 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "f0cde203-60b0-460e-bbaa-a4907b4ba2c6",
+  "versionId": "ccf384e3-da63-452a-9bf3-74b0c3f2ff2c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c54cb67ad4c89ee9523a2795d1bc98545a552b6ae46e72a55ccebe0cc00c3420"
