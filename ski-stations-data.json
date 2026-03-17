@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const stations = [\n  {\n    id: 1,\n    name: \"Poiana Brasov\",\n    region: \"Brasov\",\n    altitude_max: 1775,\n    slopes: 12,\n    difficulty: [\"beginner\", \"intermediate\", \"advanced\"],\n    open: true,\n    website: \"https://www.poiana-brasov.com\"\n  },\n  {\n    id: 2,\n    name: \"Sinaia\",\n    region: \"Prahova\",\n    altitude_max: 2000,\n    slopes: 15,\n    difficulty: [\"beginner\", \"intermediate\", \"advanced\"],\n    open: true,\n    website: \"https://www.sinaia.ro\"\n  },\n  {\n    id: 3,\n    name: \"Paltinis\",\n    region: \"Sibiu\",\n    altitude_max: 1894,\n    slopes: 6,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: true,\n    website: \"https://www.paltinis.ro\"\n  },\n  {\n    id: 4,\n    name: \"Straja\",\n    region: \"Hunedoara\",\n    altitude_max: 1868,\n    slopes: 8,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: false,\n    website: \"https://www.straja.ro\"\n  },\n  {\n    id: 5,\n    name: \"Predeal\",\n    region: \"Brasov\",\n    altitude_max: 1500,\n    slopes: 9,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: true,\n    website: \"https://www.predeal.ro\"\n  }\n];\n\nreturn stations.map(station => ({ json: station }));"
+        "jsCode": "const stations = [\n  {\n    id: 1,\n    name: \"Poiana Brasov\",\n    region: \"Brasov\",\n    altitude_max: 1775,\n    slopes: 12,\n    difficulty: [\"beginner\", \"intermediate\", \"advanced\"],\n    open: true,\n    website: \"https://www.poiana-brasov.com\",\n    lat: 45.6,\n    lon: 25.55\n  },\n  {\n    id: 2,\n    name: \"Sinaia\",\n    region: \"Prahova\",\n    altitude_max: 2000,\n    slopes: 15,\n    difficulty: [\"beginner\", \"intermediate\", \"advanced\"],\n    open: true,\n    website: \"https://www.sinaia.ro\",\n    lat: 45.35,\n    lon: 25.55\n  },\n  {\n    id: 3,\n    name: \"Paltinis\",\n    region: \"Sibiu\",\n    altitude_max: 1894,\n    slopes: 6,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: true,\n    website: \"https://www.paltinis.ro\",\n    lat: 45.65,\n    lon: 23.93\n  },\n  {\n    id: 4,\n    name: \"Straja\",\n    region: \"Hunedoara\",\n    altitude_max: 1868,\n    slopes: 8,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: false,\n    website: \"https://www.straja.ro\",\n    lat: 45.32,\n    lon: 23.22\n  },\n  {\n    id: 5,\n    name: \"Predeal\",\n    region: \"Brasov\",\n    altitude_max: 1500,\n    slopes: 9,\n    difficulty: [\"beginner\", \"intermediate\"],\n    open: true,\n    website: \"https://www.predeal.ro\",\n    lat: 45.51,\n    lon: 25.58\n  }\n];\n\nreturn stations.map(station => ({ json: station }));"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -55,7 +55,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        624,
+        832,
         0
       ],
       "id": "bdac725b-da94-40b4-9b9d-c62467549462",
@@ -69,12 +69,12 @@
     },
     {
       "parameters": {
-        "jsCode": "const userMessage = $('Webhook').item.json.body.message;\n\nreturn [{\n  json: {\n    body: JSON.stringify({\n      model: \"llama-3.3-70b-versatile\",\n      messages: [\n        {\n          role: \"system\",\n          content: \"Ești un asistent pentru stațiuni de ski din România. Răspunde întotdeauna în română.\"\n        },\n        {\n          role: \"user\", \n          content: userMessage\n        }\n      ]\n    })\n  }\n}];"
+        "jsCode": "const stations = $('Code in JavaScript').all().map(item => item.json);\nconst userMessage = $('Webhook').item.json.body.message;\nconst weatherData = $('HTTP Request1').all().map(item => item.json);\n\nconst stationsWithWeather = stations.map((station, index) => ({\n  name: station.name,\n  region: station.region,\n  altitude_max: station.altitude_max,\n  slopes: station.slopes,\n  open: station.open,\n  weather: {\n    temperature: weatherData[index]?.current?.temperature_2m ?? 'N/A',\n    snowfall: weatherData[index]?.current?.snowfall ?? 'N/A',\n    windspeed: weatherData[index]?.current?.windspeed_10m ?? 'N/A'\n  }\n}));\n\nreturn [{\n  json: {\n    body: JSON.stringify({\n      model: \"llama-3.3-70b-versatile\",\n      messages: [\n        {\n          role: \"system\",\n          content: \"Ești un asistent pentru stațiuni de ski din România. Răspunde întotdeauna în română. Folosește datele meteo live furnizate.\"\n        },\n        {\n          role: \"user\",\n          content: `${userMessage}\\n\\nDate stațiuni cu meteo live:\\n${JSON.stringify(stationsWithWeather, null, 2)}`\n        }\n      ]\n    })\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
+        624,
         0
       ],
       "id": "1f1f2ca2-c6b6-4f40-a4dc-95fa80cff12d",
@@ -102,11 +102,25 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        832,
+        1040,
         0
       ],
       "id": "07656dec-7be5-418d-8846-da35f2899efe",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $json.lat }}&longitude={{ $json.lon }}&current=temperature_2m,snowfall,windspeed_10m&timezone=Europe/Bucharest",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "34298144-c86e-476e-ae99-2fea3408d51e",
+      "name": "HTTP Request1"
     }
   ],
   "pinData": {},
@@ -126,7 +140,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript1",
+            "node": "HTTP Request1",
             "type": "main",
             "index": 0
           }
@@ -154,6 +168,17 @@
           }
         ]
       ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -162,7 +187,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ccf384e3-da63-452a-9bf3-74b0c3f2ff2c",
+  "versionId": "1d92add0-49d0-4f0f-92f9-1d46718efb4a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c54cb67ad4c89ee9523a2795d1bc98545a552b6ae46e72a55ccebe0cc00c3420"
